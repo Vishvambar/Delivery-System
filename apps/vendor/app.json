@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Food Delivery Vendor",
+    "slug": "food-delivery-vendor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fooddelivery.vendor",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos for your menu items.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select images for your menu items.",
+        "NSPhotoLibraryAddUsageDescription": "This app needs access to save photos to your photo library."
+      }
+    },
+    "android": {
+      "package": "com.fooddelivery.vendor",
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES"
+      ],
+      "requestLegacyExternalStorage": true
+    },
+    "plugins": [
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow location access for better delivery experience."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "This app needs access to your photos to add images to your menu items.",
+          "cameraPermission": "This app needs access to your camera to take photos for your menu items."
+        }
+      ]
+    ]
+  }
+}
