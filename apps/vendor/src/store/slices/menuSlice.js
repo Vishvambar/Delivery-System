@@ -167,14 +167,33 @@ const menuSlice = createSlice({
         state.loading = false;
         console.log('📥 Menu API payload:', action.payload);
         const menuData = action.payload;
+        
+        let rawMenuItems = [];
         if (Array.isArray(menuData)) {
-          state.menuItems = menuData;
+          rawMenuItems = menuData;
         } else if (menuData && Array.isArray(menuData.menu)) {
-          state.menuItems = menuData.menu;
+          rawMenuItems = menuData.menu;
         } else {
           console.warn('📥 Unexpected menu data structure, using empty array');
-          state.menuItems = [];
+          rawMenuItems = [];
         }
+        
+        // Ensure all menu items are properly serializable
+        state.menuItems = rawMenuItems.map(item => ({
+          _id: item._id,
+          name: item.name || '',
+          price: Number(item.price) || 0,
+          description: item.description || '',
+          category: item.category || 'other',
+          isAvailable: item.isAvailable !== false,
+          preparationTime: Number(item.preparationTime) || 15,
+          isVegetarian: item.isVegetarian === true,
+          spiceLevel: item.spiceLevel || 'mild',
+          imageUrl: item.imageUrl || '',
+          createdAt: item.createdAt || new Date().toISOString(),
+          updatedAt: item.updatedAt || new Date().toISOString()
+        }));
+        
         state.error = null;
       })
       .addCase(fetchMenuItems.rejected, (state, action) => {
@@ -189,7 +208,22 @@ const menuSlice = createSlice({
       })
       .addCase(createMenuItem.fulfilled, (state, action) => {
         state.loading = false;
-        state.menuItems.unshift(action.payload);
+        // Ensure payload is properly serializable
+        const newItem = {
+          _id: action.payload._id,
+          name: action.payload.name,
+          price: action.payload.price,
+          description: action.payload.description,
+          category: action.payload.category,
+          isAvailable: action.payload.isAvailable !== false,
+          preparationTime: action.payload.preparationTime,
+          isVegetarian: action.payload.isVegetarian || false,
+          spiceLevel: action.payload.spiceLevel,
+          imageUrl: action.payload.imageUrl,
+          createdAt: action.payload.createdAt || new Date().toISOString(),
+          updatedAt: action.payload.updatedAt || new Date().toISOString()
+        };
+        state.menuItems.unshift(newItem);
         state.error = null;
         
         // Throttle data sync
@@ -204,7 +238,14 @@ const menuSlice = createSlice({
           dataSyncService.saveMenuItems(vendorId, cleanMenuItems);
         }, 500);
         
-        socketService.menuItemAdded(vendorId, action.payload);
+        // Create clean data for socket emission
+        const cleanItem = {
+          _id: newItem._id,
+          name: newItem.name,
+          price: newItem.price,
+          isAvailable: newItem.isAvailable
+        };
+        socketService.menuItemAdded(vendorId, cleanItem);
       })
       .addCase(createMenuItem.rejected, (state, action) => {
         state.loading = false;

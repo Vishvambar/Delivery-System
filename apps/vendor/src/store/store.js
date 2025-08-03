@@ -11,8 +11,16 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
-      },
+      serializableCheck: false, // Disable in development
+      immutableCheck: false, // Disable in development
     }),
+  // Disable development checks that cause performance issues
+  devTools: __DEV__ && {
+    serialize: {
+      options: {
+        undefined: true,
+        function: true,
+      },
+    },
+  },
 });

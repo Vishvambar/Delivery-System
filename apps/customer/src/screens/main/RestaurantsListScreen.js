@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../services/api';
 import { imageService } from '../../services/imageService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { socketService } from '../../services/socketService';
 
 export default function RestaurantsListScreen({ navigation }) {
@@ -46,8 +47,19 @@ export default function RestaurantsListScreen({ navigation }) {
   const fetchVendors = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/vendors?sortBy=rating');
-      const vendorList = response.data.data.vendors;
+      const response = await fetch('http://192.168.5.110:5000/api/vendors?sortBy=rating', {
+        headers: {
+          'Authorization': `Bearer ${await AsyncStorage.getItem('userToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const vendorList = data.data.vendors;
       setVendors(vendorList);
 
       // Load vendor logos

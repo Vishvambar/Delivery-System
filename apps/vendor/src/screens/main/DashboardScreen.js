@@ -14,6 +14,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { apiService } from '../../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -39,23 +40,43 @@ export default function DashboardScreen({ navigation }) {
     try {
       setLoading(true);
       
-      // Fetch vendor profile
-      const vendorResponse = await apiService.getVendors({ includeAll: true });
-      const vendor = vendorResponse.data.data.vendors.find(v => v.userId._id === user.id);
+      // Fetch vendor profile using fetch (like MenuScreen does)
+      const response = await fetch('http://192.168.5.110:5000/api/vendors?includeAll=true', {
+        headers: {
+          'Authorization': `Bearer ${await AsyncStorage.getItem('userToken')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch vendor profile');
+      }
+      
+      const vendorResponse = await response.json();
+      const vendor = vendorResponse.data.vendors.find(v => v.userId._id === user.id);
       setVendorProfile(vendor);
 
       // Fetch orders for stats calculation
       if (vendor) {
-        const ordersResponse = await apiService.getVendorOrders(vendor._id);
-        console.log('📦 Orders response structure:', ordersResponse.data);
+        const ordersResponse = await fetch(`http://192.168.5.110:5000/api/orders/vendor/${vendor._id}`, {
+          headers: {
+            'Authorization': `Bearer ${await AsyncStorage.getItem('userToken')}`
+          }
+        });
+        
+        if (!ordersResponse.ok) {
+          throw new Error('Failed to fetch orders');
+        }
+        
+        const ordersData = await ordersResponse.json();
+        console.log('📦 Orders response structure:', ordersData);
         
         let orders = [];
-        if (ordersResponse.data.data && Array.isArray(ordersResponse.data.data.orders)) {
-          orders = ordersResponse.data.data.orders;
-        } else if (ordersResponse.data.data && Array.isArray(ordersResponse.data.data)) {
-          orders = ordersResponse.data.data;
-        } else if (Array.isArray(ordersResponse.data)) {
-          orders = ordersResponse.data;
+        if (ordersData.data && Array.isArray(ordersData.data.orders)) {
+          orders = ordersData.data.orders;
+        } else if (ordersData.data && Array.isArray(ordersData.data)) {
+          orders = ordersData.data;
+        } else if (Array.isArray(ordersData)) {
+          orders = ordersData;
         } else {
           console.log('⚠️ Unexpected orders data structure, using empty array');
           orders = [];

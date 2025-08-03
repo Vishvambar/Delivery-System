@@ -155,9 +155,16 @@ export default function EnhancedCartScreen({ navigation }) {
             const orderData = {
                 vendorId: cart.vendorId,
                 items: cart.items.map(item => {
-                    // FIX: Ensure menuItemId is correctly retrieved from the item object
+                    // FIX: Use the correct property for menuItemId - checking multiple possible properties
+                    const menuItemId = item.id || item._id || item.menuItemId;
+                    console.log('📦 Cart item for order:', { 
+                        name: item.name, 
+                        menuItemId, 
+                        originalItem: item 
+                    });
+                    
                     return {
-                        menuItemId: item._id, // This was likely the source of the "undefined" error
+                        menuItemId: menuItemId,
                         quantity: item.quantity,
                         specialInstructions: item.specialInstructions || ''
                     };

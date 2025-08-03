@@ -21,6 +21,7 @@ import { api } from '../../services/api';
 import { imageService } from '../../services/imageService';
 import { socketService } from '../../services/socketService';
 import { addToCart } from '../../store/slices/cartSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CATEGORIES = [
     { id: 'all', name: 'All', icon: 'grid-outline' },
@@ -84,8 +85,20 @@ export default function EnhancedHomeScreen({ navigation }) {
 
     const fetchVendors = async () => {
         try {
-            const response = await api.get('/vendors?sortBy=rating');
-            const vendorList = response.data.data.vendors;
+            // Use fetch instead of axios for better reliability
+            const response = await fetch('http://192.168.5.110:5000/api/vendors?sortBy=rating', {
+                headers: {
+                    'Authorization': `Bearer ${await AsyncStorage.getItem('userToken')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            const vendorList = data.data.vendors;
             setVendors(vendorList);
 
             // Load vendor logos
@@ -98,8 +111,19 @@ export default function EnhancedHomeScreen({ navigation }) {
 
     const fetchAllMenuItems = async () => {
         try {
-            const response = await api.get('/vendors?sortBy=rating');
-            const vendorList = response.data.data.vendors;
+            const response = await fetch('http://192.168.5.110:5000/api/vendors?sortBy=rating', {
+                headers: {
+                    'Authorization': `Bearer ${await AsyncStorage.getItem('userToken')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            const vendorList = data.data.vendors;
 
             // Collect all menu items from all vendors
             const allMenuItems = [];
@@ -129,8 +153,19 @@ export default function EnhancedHomeScreen({ navigation }) {
 
     const generatePromotionalAds = async () => {
         try {
-            const response = await api.get('/vendors?sortBy=rating');
-            const vendorList = response.data.data.vendors;
+            const response = await fetch('http://192.168.5.110:5000/api/vendors?sortBy=rating', {
+                headers: {
+                    'Authorization': `Bearer ${await AsyncStorage.getItem('userToken')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            const vendorList = data.data.vendors;
 
             // Create promotional ads from top restaurants
             const ads = vendorList.slice(0, 3).map((vendor, index) => ({
@@ -232,7 +267,7 @@ export default function EnhancedHomeScreen({ navigation }) {
     const handleAddToCart = () => {
         if (selectedMenuItem) {
             dispatch(addToCart({
-                id: selectedMenuItem._id,
+                menuItemId: selectedMenuItem._id,
                 name: selectedMenuItem.name,
                 price: selectedMenuItem.price,
                 vendorId: selectedMenuItem.vendorId,

@@ -6,7 +6,9 @@ import {
     FlatList,
     TouchableOpacity,
     Alert,
-    Image
+    Image,
+    ActivityIndicator,
+    RefreshControl
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSelector, useDispatch } from 'react-redux';
@@ -33,6 +35,7 @@ export default function MenuScreen({ navigation }) {
     const { user } = useSelector((state) => state.auth);
 
     const [selectedItems, setSelectedItems] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
 
     // State for vendor profile
     const [vendorId, setVendorIdState] = useState(null);
@@ -118,6 +121,20 @@ export default function MenuScreen({ navigation }) {
             fetchVendorProfile();
         }
     }, [dispatch, user]);
+
+    // Pull-to-refresh functionality
+    const onRefresh = async () => {
+        if (vendorId) {
+            setRefreshing(true);
+            try {
+                await dispatch(fetchMenuItems(vendorId));
+            } catch (error) {
+                console.error('Error refreshing menu items:', error);
+            } finally {
+                setRefreshing(false);
+            }
+        }
+    };
 
     const handleToggleAvailability = (itemId) => {
         dispatch(toggleMenuItemAvailability(itemId));
@@ -285,7 +302,12 @@ export default function MenuScreen({ navigation }) {
                 ))}
             </View>
 
-            {menuItems.length === 0 ? (
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#FF6B35" />
+                    <Text style={styles.loadingText}>Loading menu items...</Text>
+                </View>
+            ) : menuItems.length === 0 ? (
                 <View style={styles.emptyState}>
                     <Ionicons name="restaurant-outline" size={64} color="#ccc" />
                     <Text style={styles.emptyTitle}>No menu items found</Text>
@@ -310,6 +332,14 @@ export default function MenuScreen({ navigation }) {
                     renderItem={renderMenuItem}
                     contentContainerStyle={styles.menuList}
                     showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={['#FF6B35']}
+                            tintColor="#FF6B35"
+                        />
+                    }
                 />
             )}
         </View>
@@ -501,6 +531,22 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         marginRight: 10,
     },
+    // Loading State Styles
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 40,
+        paddingVertical: 60,
+    },
+    loadingText: {
+        fontSize: 16,
+        color: '#666',
+        marginTop: 16,
+        textAlign: 'center',
+    },
+    
+    // Empty State Styles
     emptyState: {
         flex: 1,
         justifyContent: 'center',
